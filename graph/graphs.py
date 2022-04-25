@@ -33,15 +33,17 @@ class GraphmergeNode(Node):
 # Main difference is that this node can hold a list of attributes.
 # These attributes could be the names of all the original graphs that this node appears in.
     def __init__(self, name):
-        self.attributes = []
+        self.attributes = {}
         super().__init__(name)
 
     def getAttributes(self):
-        return self.attributes
+        return list(self.attributes)
 
     def addAttribute(self, attribute):
-        self.attributes.append(attribute)
+        self.attributes[attribute] = True
 
+    def __repr__(self):
+        return self.name + ': ' + ';'.join(self.getAttributes())
 
 # Node class for EUCDM Data Elements. Each such Data Element has a Data Element number,
 # called DENumber or DENo. I store this in the field key.

@@ -5,7 +5,7 @@ import re
 #----------------------------------------------------------------------------------------
 class XMLParser():
     def __init__(self, file):
-        self.NSpattern = None
+        self.NSpattern = re.compile('^\{[^}]+\}(.+)$')
         self.filename = file
         self.root = etree.parse(self.filename).getroot()
     
@@ -15,7 +15,6 @@ class XMLParser():
         return oldname
 
     def getAllPaths(self):
-        self.NSpattern = re.compile('^\{[^}]+\}(.+)$')
         result = self.dfswp(self.root, [])
         return result
 

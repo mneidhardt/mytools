@@ -10,7 +10,7 @@ class XMLParser():
         self.root = etree.parse(self.filename).getroot()
     
     def setRootname(self, newname):
-        oldname = self.root.tag
+        oldname = self.cleanupTag(self.root.tag)
         self.root.tag = newname
         return oldname
 

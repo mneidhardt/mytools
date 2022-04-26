@@ -43,7 +43,7 @@ class GraphmergeNode(Node):
         self.attributes[attribute] = True
 
     def __repr__(self):
-        return self.name + ': ' + ';'.join(self.getAttributes())
+        return self.name + ';' + ';'.join(self.getAttributes())
 
 # Node class for EUCDM Data Elements. Each such Data Element has a Data Element number,
 # called DENumber or DENo. I store this in the field key.
@@ -99,6 +99,12 @@ class Graph():
 
         for kid in node.getChildren():
             self.showGraph(kid, indent+'    ')
+
+    def showMergedGraph(self, node, indent=0):
+        print(indent*';', str(node))
+
+        for kid in node.getChildren():
+            self.showMergedGraph(kid, indent+1)
 
     # Serialises a graph using end-of-child-markers.
     def serialiseGraph(self, root):

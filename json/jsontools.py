@@ -4,6 +4,70 @@ import datetime
 
 class JSONTool():
 
+    def dumps(self, jsonstructure):
+        return(json.dumps(jsonstructure))
+
+    def readJSON(self, filename):
+        with open(filename) as f:
+            return json.load(f)
+
+    # Returns all keys in json object, with duplicates.
+    def allKeys(self, json):
+        list = []
+
+        for k in json:
+            list.append(k)
+            if isinstance(json[k], dict):
+                list.extend(self.allKeys(json[k]))
+
+        return list
+
+    # Get all elements under a specific key, e.g. 'definitions'.
+    def getChildren(self, json):
+        result = []
+        for k in json:
+            result.append(k)
+        return result
+
+    # Similar to findElement, but takes a path as input.
+    # Example path: Root/Elem2/elem3
+    # Returns the structure at json['Root']['Elem2']['Elem3'],
+    # if each part of the path is found in json.
+    def findPath(self, json, path):
+        names = path.split('/')
+        for name in names:
+            if name not in json:
+                return None
+            else:
+                json = json[name]
+        return json
+
+    # Find the element with the given name, anywhere in json.
+    # elmentname must be a single key in the JSON structure.
+    # Returns the structure rooted at that key, if found.
+    def findElement(self, json, elementname):
+        element = None
+        for k in json:
+            if k == elementname and 'type' in json[k] and json[k]['type'] == 'object':
+                return json[k]['properties']
+            elif isinstance(json[k], dict):
+                element = self.findElement(json[k], elementname)
+        return element
+
+    # Print out all immediate children of a given element in a Schema.
+    def printKids(self, sysargv):
+        schemafile = sysargv[1]
+        parent = sysargv[2]
+        jsonobject = self.readJsonfile(schemafile)
+        parentobj = self.findElement(jsonobject, parent)
+        if parentobj is not None:
+            kids = self.getChildren(parentobj)
+            print('\n'.join(kids))
+        else:
+            print('Not found.')
+
+class EUCDMJSONTool(JSONTool):
+
     def __init__(self):
         self.pm = None
 
@@ -101,27 +165,3 @@ class JSONTool():
                     childobj = self.buildJSONInstance(kid)
                     json[self.convertName(kid.getName())] = childobj
                 return json
-        
-    def baseSchema(self, version):
-        version = [str(e) for e in version] # Convert version numbers to strings.
-        result = {}
-        result['$schema'] = 'https://json-schema.org/draft/2020-12/schema'
-        result['schemaVersion'] = '.'.join(version) # e.g. '2.1.0'
-        result['title'] = 'Declaration'
-        result['description'] = 'Created ' + datetime.datetime.now().strftime("%Y-%m-%dT%H:%M")
-        result['type'] = 'object'
-        result['additionalProperties'] = False
-        result['properties'] = {}
-        result['properties']['schemaVersion'] = {}
-        result['properties']['schemaVersion']['pattern'] = '^' + version[0] + '[.][0-9]+[.][0-9]+$'
-        result['properties']['schemaVersion']['type'] = 'string'
-        result['properties']['procedureCategory'] = {}      # The current key for what EUCDM calls 'column'. May be changed to 'column'.
-        result['properties']['procedureCategory']['type'] = 'string';
-        result['properties']['procedureCategory']['maxLength'] = 3;
-        #result['properties']['column']['type'] = 'string'
-        #result['properties']['column']['enum'] = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'I1', 'I2']
-
-        return result
-        
-    def dumps(self, jsonstructure):
-        return(json.dumps(jsonstructure))

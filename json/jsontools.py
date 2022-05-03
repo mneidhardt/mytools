@@ -1,6 +1,4 @@
 import json
-import re
-import datetime
 
 class JSONTool():
 
@@ -42,17 +40,22 @@ class JSONTool():
                 json = json[name]
         return json
 
-    # Find the element with the given name, anywhere in json.
+    # Find the dict element(s) with the given name, anywhere in json.
     # elmentname must be a single key in the JSON structure.
     # Returns the structure rooted at that key, if found.
     def findElement(self, json, elementname):
-        element = None
+        result = []
         for k in json:
-            if k == elementname and 'type' in json[k] and json[k]['type'] == 'object':
-                return json[k]['properties']
-            elif isinstance(json[k], dict):
-                element = self.findElement(json[k], elementname)
-        return element
+            if isinstance(json[k], dict):
+                if k == elementname and 'type' in json[k] and json[k]['type'] == 'object':
+                    result.append(json[k])
+                    result.extend(self.findElement(json[k], elementname))
+                elif k == elementname and 'type' in json[k]:
+                    result.append(json[k])
+                else:
+                    result.extend(self.findElement(json[k], elementname))
+
+        return result
 
     # Print out all immediate children of a given element in a Schema.
     def printKids(self, sysargv):

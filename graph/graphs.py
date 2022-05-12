@@ -30,17 +30,28 @@ class Node():
 
 class GraphmergeNode(Node):
 # Started when we did work on merging a number of IExxx messages.
-# Main difference is that this node can hold a list of attributes.
-# These attributes could be the names of all the original graphs that this node appears in.
+# Main difference is that this node can hold a dict of attributes,
+# and an origin. 
+# Attributes are like ones in XML.
+# Origin can hold the origin(s) of the element, these nodes are merged from 
+# several XML files, so there can be several origin files for a merged node.
     def __init__(self, name):
         self.attributes = {}
+        self.origins = {}
         super().__init__(name)
 
     def getAttributes(self):
-        return list(self.attributes)
+        return self.attributes
 
-    def addAttribute(self, attribute):
-        self.attributes[attribute] = True
+    def addAttribute(self, attributename, attributevalue):
+        self.attributes[attributename] = attributevalue
+    
+    def getOrigins(self):
+        return list(self.origins)
+
+    def addOrigin(self, origin):
+        self.origins[origin] = True
+    
 
     def __repr__(self):
         return self.name + ';' + ';'.join(self.getAttributes())

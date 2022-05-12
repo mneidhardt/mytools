@@ -30,6 +30,6 @@ class XMLBuilder():
             return
 
         for child in node.getChildren():
-            childxml = etree.SubElement(newxml, child.getName())
-            childxml.text = ','.join(child.getAttributes())
+            childxml = etree.SubElement(newxml, child.getName(), attrib=child.getAttributes())
+            childxml.text = ','.join(child.getOrigins())
             self.buildXML(child, childxml)

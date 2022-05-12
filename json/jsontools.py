@@ -69,6 +69,92 @@ class JSONTool():
         else:
             print('Not found.')
 
+class EUCDMXMLJSONMapperTool(JSONTool):
+    # Class specifically made for analysing IExxx vs EUCDM.
+    # We were asked to analyse how to merge 'extra' fields from IExxx (described in DDNXA)
+    # into the EUCDM, to have a general model.
+    # So i'm trying to do that by trying to map each xpath (IExxx is XSD, and EUCDM in our
+    # version is JSON) to a path in EUCDM.
+    #----------------------------------------------------------------------------
+    
+    def __init__(self):
+        self.namemap = {}
+        self.namemap['GoodsItem'] = 'GovernmentAgencyGoodsItem'
+
+    def convDict(self, json):
+        result = {}
+        for w in json:
+            result[self.convert(w)] = w
+        return result
+
+    # Normalise words. IExxx use one form and EUCDM another, this hopefully
+    # makes it possible to compare/match.
+    def convert(self, word):
+        return word.rstrip().lower().replace('_', '').replace('-', '').replace('/', '')
+
+    # Similar to findPath, but takes into account that you can meet an array.
+    # Example path: [Root, Elem2, Elem3]
+    # Returns the structure at json['Root']['Elem2']['Elem3'],
+    # if each part of the path is found in json.
+    # Args:
+    #   json: JSON document (not a Schema)
+    #   path: List of elements that form a path, e.g. an XPath.
+    def findAnypath(self, json, path):
+        for name in path:
+            # Get first element, in case current json is a list.
+            if isinstance(json, list):
+                json = json[0]
+                
+            if name in self.namemap:
+                name = self.namemap[name]
+            #if name == 'GoodsItem':
+            #    name = 'Government_Agency_Goods_Item'
+            
+            # Convert keys on this level of the JSON object.
+            # Problem example: EUCDM says Goods_Shipment, and IEXXX says GoodsShipment.
+            # This tries to solve that.
+            convnames = self.convDict(json)
+            
+            #print('>> ', name, ' in ', list(convnames))
+            
+            if self.convert(name) in convnames:
+                #print('    1 Got', name)
+                json = json[convnames[self.convert(name)]]
+            elif name in json:
+                #print('    2 Got', name)
+                json = json[name]
+            else:
+                return None
+                
+        return json
+
+        
+    # Looks for a given path in a JSON Schema.
+    # Takes a string as input, which must use '/' as separator.
+    # Example path: Root/Elem2/elem3
+    # Returns the structure at json['Root']['Elem2']['Elem3'],
+    # if each part of the path is found in json.
+    # NB: Not successful. When I overwrite json object as I descend, I'm unable to get back up, e.g. to #/definitions.
+    def findSchemapath(self, json, path):
+        names = path.split('/')
+        for name in names:
+            if name not in json:
+                if 'type' in json and json['type'] == 'object' and 'properties' in json:
+                    if name in json['properties']:
+                        print('  Found ', name, 'in properties.')
+                        json = json['properties'][name]
+                    else:
+                        return None
+                elif '$ref' in json:
+                    refpath = json['$ref'].lstrip('#/').split('/')
+                    print(refpath)
+                else:
+                    return None
+            else:
+                print('  Found ', name)
+                json = json[name]
+        return json
+
 class EUCDMJSONTool(JSONTool):
 
     def __init__(self):

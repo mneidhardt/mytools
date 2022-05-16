@@ -1,0 +1,37 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "schemaVersion": "2.2.0",
+    "title": "Declaration",
+    "description": "Created",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "schemaVersion": {
+            "pattern": "^2[.][0-9]+[.][0-9]+$",
+            "type": "string"
+        },
+        "procedureCategory": {
+            "type": "string",
+            "maxLength": 3
+        },
+        "Declaration": {
+            "description": "1",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Declaration_type": {
+                    "description": "11 01 000 000",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "Declaration_type": {
+                            "description": "11 01 001 000. EUCDM format=an..5",
+                            "type": "string",
+                            "pattern": "^[a-\u00e5A-\u00c50-9]{0,5}$"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

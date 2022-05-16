@@ -2,8 +2,11 @@ import json
 
 class JSONTool():
 
+    def loads(self, string):
+        return(json.loads(string))
+
     def dumps(self, jsonstructure):
-        return(json.dumps(jsonstructure))
+        return(json.dumps(jsonstructure, indent=4))
 
     def readJSON(self, filename):
         with open(filename) as f:
@@ -34,10 +37,10 @@ class JSONTool():
     def findPath(self, json, path):
         names = path.split('/')
         for name in names:
-            if name not in json:
-                return None
-            else:
+            if name in json:
                 json = json[name]
+            else:
+                return None
         return json
 
     # Find the dict element(s) with the given name, anywhere in json.

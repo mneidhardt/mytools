@@ -31,7 +31,7 @@ class JSONTool():
         return result
 
     # Like findpath, but using recursion.
-    # Example path: Root/Elem2/elem3
+    # Example path: ['Root', 'Elem2', 'elem3']
     # Returns the structure at json['Root']['Elem2']['Elem3'],
     # if each part of the path is found in json.
     def findPathRecursive(self, json, path):

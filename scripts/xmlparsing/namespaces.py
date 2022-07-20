@@ -7,6 +7,4 @@ from xsd2xml.xsdparser import XSDParser
 #
 
 xp = XSDParser(sys.argv[1])
-xp.start()
-output = xp.writeXML()
-print('Wrote xml to', output)
+xp.findNS()

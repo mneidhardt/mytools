@@ -192,48 +192,43 @@ class XSDParser():
             return
 
         # child here refers to a child node of the XSD.
-        # childxml below is the current node of the XML being produced.
+        # newxml/childxml is the parent/child node of the XML being produced.
         for child in node:
             if child.tag == self.NS+'element' and 'ref' in child.attrib:
                 # Replace the current node with the referenced node.
                 refchild = self.getReference(self.NS, child.attrib['ref'])
                 if len(refchild) > 1:
-                    print(indent, 'Found more than one node reference by this name:', child.attrib['ref'])
+                    print(indent, 'Fatal - found more than one node reference by this name:', child.attrib['ref'])
                     sys.exit(0)
                 print(indent, 'Ref node', child.attrib['ref'], 'replaced by:', refchild[0].tag, refchild[0].attrib)
                 self.parsefile(refchild, newxml, indent, child.attrib)
-            elif child.tag == self.NS+'element':
-                if 'name' not in child.attrib and 'ref' not in child.attrib:
-                    print(child.tag, child.attrib, '"name" and "ref" missing.')
-                    continue
-                
-                if 'type' in child.attrib and child.attrib['type'] in self.primitivetypes:
-                    childxml = etree.SubElement(newxml, child.attrib['name'])
-                    childxml.set('primitivetype', child.attrib['type'])
-                    self.addOccurrenceConstraints(childxml, child.attrib, inheritedattribs)
-                elif 'type' in child.attrib:
-                    typenode = self.getType(self.NS, child.attrib['type'])
-                    childxml = etree.SubElement(newxml, child.attrib['name'])
-                    self.addOccurrenceConstraints(childxml, child.attrib, inheritedattribs)
+            elif child.tag == self.NS+'element' and 'type' in child.attrib and child.attrib['type'] in self.primitivetypes:
+                childxml = etree.SubElement(newxml, child.attrib['name'])
+                childxml.set('primitivetype', child.attrib['type'])
+                self.addOccurrenceConstraints(childxml, child.attrib, inheritedattribs)
+                self.parsefile(child, childxml, indent+'  ')
+            elif child.tag == self.NS+'element' and 'type' in child.attrib:
+                typenode = self.getType(self.NS, child.attrib['type'])
+                childxml = etree.SubElement(newxml, child.attrib['name'])
+                self.addOccurrenceConstraints(childxml, child.attrib, inheritedattribs)
                         
-                    if typenode is not None:
-                        self.parsefile(typenode, childxml, indent+'  ')
+                if typenode is not None:
+                    self.parsefile(typenode, childxml, indent+'  ')
 
-                    # Even if element is defined in a complex or simple type, there may be more to parse after that.
-                    self.parsefile(child, childxml, indent+'  ')
-                elif 'abstract' in child.attrib and child.attrib['abstract'].lower() == 'true':
-                    # If element is abstract, look for substitutions.
-                    subs = self.search4Substitutions(self.NS, child.attrib['name'])
-                    self.parsefile(subs, newxml, indent+'  ')
-                    # Here, I dont want to look for minOccurs,maxOccurs etc. as the childxml is not made here.
-                else:
-                    childxml = etree.SubElement(newxml, child.attrib['name'])
-                    self.addOccurrenceConstraints(childxml, child.attrib, inheritedattribs)
-                    self.parsefile(child, childxml, indent+'  ')
-
+                # Even if element is defined in a complex or simple type, there may be more to parse after that.
+                self.parsefile(child, childxml, indent+'  ')
+            elif child.tag == self.NS+'element' and 'abstract' in child.attrib and child.attrib['abstract'].lower() == 'true':
+                # If element is abstract, look for substitutions.
+                subs = self.search4Substitutions(self.NS, child.attrib['name'])
+                self.parsefile(subs, newxml, indent+'  ')
+                # Here, I dont want to look for minOccurs,maxOccurs etc. as the childxml is not made here.
+            elif child.tag == self.NS+'element':
+                childxml = etree.SubElement(newxml, child.attrib['name'])
+                self.addOccurrenceConstraints(childxml, child.attrib, inheritedattribs)
+                self.parsefile(child, childxml, indent+'  ')
             elif child.tag == self.NS+'restriction':
                 if 'restrictionbase' in newxml.attrib:
-                    print('In restrictionbase, replacing ', newxml.attrib['restrictionbase'], 'with', child.attrib['base'])
+                    print(indent, 'In restrictionbase, replacing ', newxml.attrib['restrictionbase'], 'with', child.attrib['base'])
                 newxml.set('restrictionbase', child.attrib['base'])
                 type = self.getType(self.NS, child.attrib['base'])
                 if type is not None:

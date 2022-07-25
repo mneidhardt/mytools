@@ -196,13 +196,12 @@ class XSDParser():
         for child in node:
             if child.tag == self.NS+'element' and 'ref' in child.attrib:
                 # Replace the current node with the referenced node.
-                inheritedattribs = child.attrib
-                refchild = self.getReference(self.NS, inheritedattribs['ref'])
+                refchild = self.getReference(self.NS, child.attrib['ref'])
                 if len(refchild) > 1:
-                    print(indent, 'Found more than one node reference by this name:', inheritedattribs['ref'])
+                    print(indent, 'Found more than one node reference by this name:', child.attrib['ref'])
                     sys.exit(0)
-                print(indent, 'Ref node', inheritedattribs['ref'], 'replaced by:', refchild[0].tag, refchild[0].attrib)
-                self.parsefile(refchild, newxml, indent, inheritedattribs)
+                print(indent, 'Ref node', child.attrib['ref'], 'replaced by:', refchild[0].tag, refchild[0].attrib)
+                self.parsefile(refchild, newxml, indent, child.attrib)
             elif child.tag == self.NS+'element':
                 if 'name' not in child.attrib and 'ref' not in child.attrib:
                     print(child.tag, child.attrib, '"name" and "ref" missing.')

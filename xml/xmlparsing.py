@@ -14,10 +14,6 @@ class XMLParser():
         self.root.tag = newname
         return oldname
 
-    def getAllPaths4Neo(self):
-        result = self.dfs4Neo(self.root, [])
-        return result
-
     def getAllPaths(self):
         result = self.dfswp(self.root, [])
         return result
@@ -38,40 +34,6 @@ class XMLParser():
         else:
             return tag
 
-    # Does depth first traversal.
-    # For use when parsing an XML instance of an XSD, e.g. from mytools/xml/xsdparsing.py,
-    # and to be used in Neo4J.
-    # The method saves the full path of every leaf, as an element in the list returned.
-    # Each part of a path consists of the tuble (name, minOccurs, maxOccurs).
-    # Supposed to work on an XML instance with XSD info such as minOccurs/maxOccurs as attributes.
-    # Returns a list of all paths.
-    def dfs4Neo(self, node, path):
-        result = []
-
-        if node is None:
-            return result
-        else:
-            name = self.cleanupTag(node.tag)
-            minoccurs = 1
-            maxoccurs = 1
-            if 'minOccurs' in node.attrib:
-                minoccurs = int(node.attrib['minOccurs'])
-            if 'maxOccurs' in node.attrib and node.attrib['maxOccurs'].lower() == 'unbounded':
-                maxoccurs = 99999
-            elif 'maxOccurs' in node.attrib:
-                maxoccurs = int(node.attrib['maxOccurs'])
-            
-            path.append((name, minoccurs, maxoccurs))
-
-        if len(node) == 0:
-            # Need to get a deep copy of elements of the path at this point in time.
-            result.append([x for x in path])
-        else:
-            for child in node:
-                result.extend(self.dfs4Neo(child, path))
-                path.pop()
-            
-        return result
     
     # Does depth first traversal, with path.
     # This means that the method saves the full path of every leaf.

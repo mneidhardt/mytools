@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ROOT id="1">
+<A id="2" minOccurs="1" maxOccurs="1">
+<D id="3" minOccurs="0" maxOccurs="1"/>
+<B id="4" minOccurs="1" maxOccurs="99999"/>
+</A>
+<B id="4" minOccurs="1" maxOccurs="99999">
+<B1 id="5" minOccurs="1" maxOccurs="1">
+<E id="6" minOccurs="1" maxOccurs="2"/>
+</B1>
+<B2 id="7" minOccurs="0" maxOccurs="1"/>
+</B>
+</ROOT>

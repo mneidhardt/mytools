@@ -1,0 +1,94 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "schemaVersion": "2.2.0",
+    "title": "Declaration",
+    "description": "Created 2022-07-29T10:45",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "schemaVersion": {
+            "pattern": "^2[.][0-9]+[.][0-9]+$",
+            "type": "string"
+        },
+        "procedureCategory": {
+            "type": "string",
+            "maxLength": 3
+        },
+        "Rod-node": {
+            "description": "1",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "B-noden": {
+                    "description": "4",
+                    "type": "array",
+                    "maxItems": 99999,
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "B2-noden": {
+                                "description": "7. EUCDM format=an7",
+                                "type": "string",
+                                "pattern": "^[a-\u00e5A-\u00c50-9]{7}$"
+                            },
+                            "B1-noden": {
+                                "description": "5",
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "E-noden": {
+                                        "description": "6. EUCDM format=a5",
+                                        "type": "array",
+                                        "maxItems": 2,
+                                        "items": {
+                                            "type": "string",
+                                            "pattern": "^[a-\u00e5A-\u00c5]{5}$"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "E-noden"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "B2-noden",
+                            "B1-noden"
+                        ]
+                    }
+                },
+                "A-noden": {
+                    "description": "2",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "B-noden": {
+                            "description": "4",
+                            "type": "array",
+                            "maxItems": 99999,
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {}
+                            }
+                        },
+                        "D-noden": {
+                            "description": "3. EUCDM format=an25",
+                            "type": "string",
+                            "pattern": "^[a-\u00e5A-\u00c50-9]{25}$"
+                        }
+                    },
+                    "required": [
+                        "B-noden",
+                        "D-noden"
+                    ]
+                }
+            },
+            "required": [
+                "B-noden",
+                "A-noden"
+            ]
+        }
+    }
+}

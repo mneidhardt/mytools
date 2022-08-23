@@ -62,9 +62,9 @@ if __name__ == "__main__":
         jtool = EUCDMJSONTool()
         jtool.setPatternMatcher(PatternMatcher())
     
-        sgraf = bs.readSerialisedGraph(filename)
+        sgraf = gtool.readSerialisedGraph(filename)
         dedict = bs.getDEDict(defilename)
-        graf = gtool.deserialiseGraph(sgraf['nodes'], sgraf['cardinalities'])
+        graf = gtool.deserialiseGraph(sgraf)
         annotateNodes(graf, dedict, jtool)
         gtool.showGraph(graf)
         schema = {}
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         with io.open(schemafilename, 'w', encoding='utf8') as fh:
             fh.write(jtool.dumps(result))
 
-    except (IndexError, ValueError, NameError):
-    #except Error as err:
+    #except (IndexError, ValueError, NameError):
+    except Error as err:
         print(str(err))
         print(syntax(','.join(legalcolumns)))

@@ -37,8 +37,13 @@ class Neo4JImport:
                 maxoccurs = 99999
             else:
                 maxoccurs = int(etreenode.attrib['maxOccurs'])
-            
-        return Neo4jNode(self.cleanupTag(etreenode.tag), str(etreenode.attrib['id']), minoccurs, maxoccurs)
+        # NB: I added the possibility to import XML without 'id' as attribute.
+        #     I'm not sure how this should be done in the future, but perhaps
+        #     there should always be an 'id' attribute.
+        if 'id' in etreenode.attrib:
+            return Neo4jNode(self.cleanupTag(etreenode.tag), str(etreenode.attrib['id']), minoccurs, maxoccurs)
+        else:
+            return Neo4jNode(self.cleanupTag(etreenode.tag), str(self.getNextID()), minoccurs, maxoccurs)
 
     # Insert an XML instance file into Neo4j.
     # Arg when calling is the root of the XML tree.

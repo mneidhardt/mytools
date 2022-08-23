@@ -159,14 +159,14 @@ class Graph():
     # Returns a list of 3-tuples, one for each node and end-of-child-marker.
     # The 3 elements in a tuple are node key, minimum cardinality, maximum cardinality.
     #
-    # Expects a serialisation using end-of-child-marker.
+    # Expects a serialisation made using end-of-child-marker.
     # A serialised graph must have 3 pieces of information per line, separated by a slash.
     # The 3 pieces are the node key and its min. and max. cardinality.
-    # As an example 7/1/9 means node key is 7, with min. cardinality 1 and max. cardinality 9.
+    # As an example 7/0/9 means node key is 7, with min. cardinality 0 and max. cardinality 9.
     # As end-of-child marker I use exclamation mark. When one is encountered,
     # it means go up one level.
     # As an example, the serialised graph (imagine that commas are replaced with newlines ;):
-    # 1,12,01,!,02,!,!,7/9,12,01,!,02,!,03
+    # 1,12,01,!,02,!,!,7/0/9,12,01,!,02,!,03
     # deserialises to this graph:
     #        1
     #       / \
@@ -175,7 +175,7 @@ class Graph():
     # 01  02     12
     #          /  |  \
     #         01  02  03
-    # The node labelled 7 has cardinality of 9, though this is not shown in the graph.
+    # The node labelled 7 has min/max cardinality of 0/9 (though not shown in the graph).
     # This is used in JSON Schema.
     #
     # This is based on a version from class BaseStructures. I think its better placed here.

@@ -136,7 +136,7 @@ class Graph():
     # Deserialise a graph serialised using end-of-child-markers.
     # This uses EUCDMNode.
     # nodes is a list of tuples, as produced by readSerialisedGraph below here.
-    # Each node has 3 elements, node key, minimum cardinality and maximum cardinality.
+    # Each of these tuples is a node and has 3 elements: node key, minimum cardinality and maximum cardinality.
     # At the moment, I do not use minimum cardinality, only maximum cardinality.
     def deserialiseGraph(self, nodes):
         idx = 0

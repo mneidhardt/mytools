@@ -37,25 +37,20 @@ def annotateNodes(node, dedict, jt):
     for kid in node.getChildren():
         annotateNodes(kid, dedict, jt)
 
-def syntax(legalcolumns):
+def syntax():
     txt = []
     txt.append(sys.argv[0] + ' sg de cn')
     txt.append('  sg is the filename containing the serialied graph.')
     txt.append('  de is the filename containing the data elements, their names and formats.')
     txt.append('  cn is the columnname you want a schema for. Currently one of these:')
-    txt.append(legalcolumns)
     return "\n".join(txt)
 
 if __name__ == "__main__":
 
     try:
-        legalcolumns = [ 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'I1', 'I2' ]
-
         filename = sys.argv[1] # Name of file containing serialised graph.
         defilename = sys.argv[2] # Name of file containing data element number, name and format.
-        columnname = sys.argv[3] # 'Column' name, currently one of these:
-        if columnname not in legalcolumns:
-            raise ValueError()
+        columnname = sys.argv[3] # 'Column' name. Not used at the moment, other than for output filename.
 
         bs = BaseStructures()
         gtool = Graph()
@@ -79,6 +74,6 @@ if __name__ == "__main__":
             fh.write(jtool.dumps(result))
 
     #except (IndexError, ValueError, NameError):
-    except Error as err:
+    except Exception as err:
         print(str(err))
-        print(syntax(','.join(legalcolumns)))
+        print(syntax())

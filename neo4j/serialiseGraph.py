@@ -12,16 +12,19 @@ def serialiseGraph(session, rootdeno):
     return serialise(session, [(rootdeno,1,1)])
 
 # Args: session is the Neo4J session.
-# path is the list of nodes for the current path. Each of these nodes is a tuple made up of
-# of the node key, the key's mininum cardinality and the key's maximum cardinality.
+# path is the list of nodes for the current path. Each of these nodes is a tuple made up
+# of these element:
+#       the node key,
+#       the key's mininum cardinality and
+#       the key's maximum cardinality.
 # Cardinality here means the nodes cardinality with respect to its parent. The root node
-# has somewhat arbitrarily been given min/max card 1.
+# has been given min/max card 1.
 # Invariant: path has at least 1 node. The last element is the latest addition,
 # and the one whose children I will search for.
 def serialise(session, path):
     result = []
     query = createQuery(path)
-    # print(query)
+    print(query)
     g = session.read_transaction( lambda tx: tx.run(query,).graph())
     result.append(stringifyNode(path[-1]))
     
@@ -57,12 +60,13 @@ def createQuery(path):
     # The last relation and the last node must have variables attached, as they are the ones
     # I want returned.
     expr.append("<-[r:CHILD_OF]-")
-    expr.append("(n:Node)")
+    expr.append("(n:Node) where {ss} in n.Subschemas".format(ss=subschema))
     expr.append(' return n,r')
     return 'MATCH ' + ''.join(expr)
 
 userid = sys.argv[1]
 password = sys.argv[2]
+subschema = sys.argv[3]
 driver = GraphDatabase.driver("bolt://localhost:7687", auth=(userid, password))
 
 with driver.session() as session:

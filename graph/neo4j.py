@@ -22,7 +22,7 @@ class Neo4jNode(Node):
     # Made for use with depth first search of a graph, e.g. XSD or JSON Schema.
     # 
     def toString(self, varname=''):
-        return "(" + varname + ":Node {name: '" + self.name + "', DENo: '" + self.id + "'})"
+        return "(" + varname + ":Node {name: '" + self.name + "', ID: '" + self.id + "'})"
         
     def toStringWithRelation(self, varname='', direction='L'):
         relation = "-[:CHILD_OF {mincardinality: " + str(self.getMinCardinality()) + ", maxcardinality: " + str(self.getMaxCardinality()) + "}]-"

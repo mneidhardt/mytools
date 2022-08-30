@@ -42,7 +42,7 @@ def syntax():
     txt.append(sys.argv[0] + ' sg de cn')
     txt.append('  sg is the filename containing the serialied graph.')
     txt.append('  de is the filename containing the data elements, their names and formats.')
-    txt.append('  cn is the columnname you want a schema for. Currently one of these:')
+    txt.append('  cn is the columnname you want a schema for. Currently not necessary.')
     return "\n".join(txt)
 
 if __name__ == "__main__":

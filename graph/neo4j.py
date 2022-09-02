@@ -8,6 +8,7 @@ class Neo4jNode(Node):
         self.id = id                    # The ID of the node (e.g. DENumber in EUCDM). String.
         self.mincardinality = mincard   # Minimum cardinality for this node in relation to its parent. Integer.
         self.maxcardinality = maxcard   # Maximum cardinality for this node in relation to its parent. Integer.
+        self.subschemas = []            # This is a list of the subschemas this node participates in.
 
     def getID(self):
         return self.id
@@ -17,10 +18,14 @@ class Neo4jNode(Node):
      
     def getMaxCardinality(self):
         return self.maxcardinality
+
+    def getSubSchemas(self):
+        return self.subschemas
+
+    def addSubSchema(self, subschema):
+        self.subschemas.append(subschema)
     
     # Stringify node, possibly with relation.
-    # Made for use with depth first search of a graph, e.g. XSD or JSON Schema.
-    # 
     def toString(self, varname=''):
         return "(" + varname + ":Node {name: '" + self.name + "', ID: '" + self.id + "'})"
         

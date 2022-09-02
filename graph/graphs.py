@@ -135,20 +135,83 @@ class Graph():
     
     # Deserialise a graph serialised using end-of-child-markers.
     # This uses EUCDMNode.
-    def deserialiseGraph(self, nodes, cardinalities):
+    # nodes is a list of tuples, as produced by readSerialisedGraph below here.
+    # Each of these tuples is a node and has 3 elements: node key, minimum cardinality and maximum cardinality.
+    # At the moment, I do not use minimum cardinality, only maximum cardinality.
+    def deserialiseGraph(self, nodes):
         idx = 0
-        root = EUCDMNode(nodes[idx], cardinalities[idx], None, None)
-        self.deserialise(nodes, cardinalities, idx+1, root)
+        root = EUCDMNode(nodes[idx][0], nodes[idx][2], None, None)
+        self.deserialise(nodes, idx+1, root)
         return root
     
-    def deserialise(self, nodes, cardinalities, idx, node):
+    def deserialise(self, nodes, idx, node):
         if idx >= len(nodes):
             return
-        elif nodes[idx] == '!':
-            self.deserialise(nodes, cardinalities, idx+1, node.getParent())
+        elif nodes[idx][0] == '!':
+            self.deserialise(nodes, idx+1, node.getParent())
         else:
-            child = EUCDMNode(nodes[idx], cardinalities[idx], None, None)
+            child = EUCDMNode(nodes[idx][0], nodes[idx][2], None, None)
             node.addChild(child)
             child.setParent(node)
-            self.deserialise(nodes, cardinalities, idx+1, child)
+            self.deserialise(nodes, idx+1, child)
+
+    # Reads a serialised n-ary tree graph.
+    # Returns a list of 3-tuples, one for each node and end-of-child-marker.
+    # The 3 elements in a tuple are node key, minimum cardinality, maximum cardinality.
+    #
+    # Expects a serialisation made using end-of-child-marker.
+    # A serialised graph must have 3 pieces of information per line, separated by a slash.
+    # The 3 pieces are the node key and its min. and max. cardinality.
+    # As an example 7/0/9 means node key is 7, with min. cardinality 0 and max. cardinality 9.
+    # As end-of-child marker I use exclamation mark. When one is encountered,
+    # it means go up one level.
+    # As an example, the serialised graph (imagine that commas are replaced with newlines ;):
+    # 1,12,01,!,02,!,!,7/0/9,12,01,!,02,!,03
+    # deserialises to this graph:
+    #        1
+    #       / \
+    #    12    7
+    #   / \     \
+    # 01  02     12
+    #          /  |  \
+    #         01  02  03
+    # The node labelled 7 has min/max cardinality of 0/9 (though not shown in the graph).
+    # This is used in JSON Schema.
+    #
+    # This is based on a version from class BaseStructures. I think its better placed here.
+    # Also, this version can read a serialised graph with both minimum and maximum cardinality
+    # for a node. I have made this backwards compatible, so this reads files where a line
+    # has either 1, 2 or 3 pieces of information.
+    # If only the node key is present, min. and max. cardinality are set to 1.
+    # If only the node key and 1 cardinality number are present, min. cardinality is set to 1,
+    # and max. cardinality is set to the value from the file.
+    # If the node key and 2 values are present, they are interpreted as node key, min. cardinality
+    # and max. cardinality.
+    #-------------------------------------------------------------------------------------------
+    def readSerialisedGraph(self, filename):
+        nodes = []
+
+        with open(filename) as f:
+            lineno=0
+            for line in f:
+                lineno += 1
+                line = line.strip()
+                if line.lstrip().startswith('#'):
+                    continue
+                elems = [e.strip() for e in line.split('/')]
+
+                if len(elems) == 3:
+                    tuple = (elems[0], int(elems[1]), int(elems[2]))
+                elif len(elems) == 2:
+                    tuple = elems[0], 1, int(elems[1])
+                elif len(elems) == 1 and elems[0] == '!':
+                    tuple = '!', 0, 0
+                elif len(elems) == 1:
+                    tuple = elems[0], 1, 1
+                else:
+                    raise ValueError('Something is not right on line ' + str(lineno))
+                
+                nodes.append(tuple)
+
+        return nodes
 

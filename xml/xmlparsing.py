@@ -34,6 +34,7 @@ class XMLParser():
         else:
             return tag
 
+    
     # Does depth first traversal, with path.
     # This means that the method saves the full path of every leaf.
     # Returns a list of all leaves with full path.

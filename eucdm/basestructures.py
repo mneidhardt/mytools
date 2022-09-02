@@ -1,4 +1,5 @@
 import csv
+import sys
 
 #
 # This class is meant to read input data, and process it into various structures that make it easier
@@ -33,6 +34,9 @@ class BaseStructures():
     def readSerialisedGraph(self, filename):
         nodes = []
         cardinalities = []
+        
+        print('"readSerialisedGraph": Use the version in class mytools.graphs.Graph')
+        sys.exit(0)
 
         with open(filename) as f:
             lineno=0

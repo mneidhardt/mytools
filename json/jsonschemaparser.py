@@ -1,5 +1,7 @@
 import json
 import sys
+sys.path.insert(1, '/Users/mine/kode/python')
+from mytools.graph.graphs import EUCDMNode
 
 class JSONSchemaParser():
     # Args:
@@ -8,14 +10,22 @@ class JSONSchemaParser():
     # I.e. the ones that you can refer to using $ref.
     # Leave empty if your schema does not use $ref.
     def __init__(self, filename):
+        self.nodeclass = None       # Node class.
         self.fullstructure = None   # Full JSON structure.
-        self.js = None              # The structure under the top level 'properties'
-                                    # This is what I will parse, to avoid going into a possible definition subtree used by $ref.
+        self.js = None              # The structure under the top level 'properties' This is what I will parse,
+                                    # to avoid going into a subtree used by $ref. This might not be present, but if it is,
+                                    # it should not be processed independently.
         
         self.fullstructure = self.readJSON(filename) 
+
         for k in self.fullstructure:
             if k == 'properties':
                 self.js = self.fullstructure[k]
+
+        self.keywords = ['description', 'additionalProperties', 'minimum', 'maximum', 'required', 'pattern', 'maxLength', 'minLength', 'maxItems', 'minItems', 'type', 'multipleOf']
+
+    def setNodeclass(self, nodeclass):
+        self.nodeclass = nodeclass
 
     def readJSON(self, filename):
         with open(filename) as f:
@@ -36,7 +46,7 @@ class JSONSchemaParser():
                 return self._parseJSD(js[k])
             elif k == 'items':
                 return self._parseJSD(js[k])
-            elif k in ['description', 'additionalProperties', 'minimum', 'maximum', 'required', 'pattern', 'maxLength', 'minLength', 'maxItems', 'minItems', 'type', 'multipleOf']:
+            elif k in self.keywords:
                 pass
             elif isinstance(js[k], dict):
                 cardinalities = self.getCardinalities(js[k])
@@ -96,14 +106,10 @@ class JSONSchemaParser():
                 maxcard = jsonstruct['maxItems']
         return(mincard, maxcard)
         
-filename = sys.argv[1]
+if __name__ == "__main__":
+    filename = sys.argv[1]
 
-jp = JSONSchemaParser(filename)
+    jp = JSONSchemaParser(filename)
+    jp.setNodeclass(EUCDMNode)
 
-res = jp.parseJSD()
-
-#refvalues = jp.findOccurrences('$ref', jp.js)
-#refvalues.sort()
-#refvalues = list(set(refvalues))
-#refvalues.sort()
-#print('\n'.join(refvalues))
+    res = jp.parseJSD()

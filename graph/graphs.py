@@ -64,21 +64,32 @@ class GraphmergeNode(Node):
 # and an..30 for 0-30 alphannumeric characters.
 #----------------------------------------------------------------------------------------
 class EUCDMNode(Node):
-    def __init__(self, key, cardinality, name, format):
-        super().__init__(name)
-        self.key = key              # This is the full DENumber. String.
-        self.cardinality = cardinality # Cardinality of this node in relation to its parent. Int.
-        self.format = format            # an..XY or similar, as in EUCDM. String.
+    def __init__(self, key):    #, mincard, maxcard, name, format):
+        super().__init__(None)
+        self.key = key                  # ID of the node. String.
+        self.mincardinality = None      # Minimum cardinality of this node in relation to its parent. Int.
+        self.maxcardinality = None      # Maximum cardinality of this node in relation to its parent. Int.
+        self.format = None              # an..XY or similar, as in EUCDM. String.
         self.codelist = None            # Does this field have a code list. Value is one of ['Y', 'N', None].
+        self.ownID = None               # Any ID the node has, e.g. DENumber for EUCDM. String.
         
+    def setValues(self, mincard, maxcard, name, format):
+        self.mincardinality = mincard
+        self.maxcardinality = maxcard
+        super().__init__(name)
+        self.format = format
+
     def getKey(self):
         return self.key
      
     def getDENumber(self):
         return self.denumber
 
-    def getCardinality(self):
-        return self.cardinality
+    def getMinCardinality(self):
+        return self.mincardinality
+
+    def getMaxCardinality(self):
+        return self.maxcardinality
 
     def getFormat(self):
         return self.format
@@ -94,7 +105,7 @@ class EUCDMNode(Node):
 
     def __repr__(self):
         result = []
-        for v in [self.key, str(self.cardinality), self.name, self.format, self.codelist]:
+        for v in [self.key, str(self.mincardinality), str(self.maxcardinality), self.name, self.format, self.codelist]:
             if v:
                 result.append(v)
 

@@ -1,7 +1,7 @@
 import json
 import sys
 sys.path.insert(1, '/Users/mine/kode/python')
-from mytools.graph.graphs import EUCDMNode
+from mytools.graph.graphs import EUCDMNode, Graph
 
 class JSONSchemaParser():
     # Args:
@@ -10,6 +10,7 @@ class JSONSchemaParser():
     # I.e. the ones that you can refer to using $ref.
     # Leave empty if your schema does not use $ref.
     def __init__(self, filename):
+        self.counter = 0
         self.nodeclass = None       # Node class.
         self.fullstructure = None   # Full JSON structure.
         self.js = None              # The structure under the top level 'properties' This is what I will parse,
@@ -31,16 +32,19 @@ class JSONSchemaParser():
         with open(filename) as f:
             return json.load(f)
 
+    def nextID(self):
+        self.counter += 1
+        return self.counter
+
     def parseJSD(self):
         result = self._parseJSD(self.js)
-        print(json.dumps(result, indent=4))
     
     # Returns all keys in json object, with duplicates.
     # Currently this uses a json structure to record the result, but should really use a graph structure,
     # e.g. EUCDMNode.
     def _parseJSD(self, js):
-        result = {}
-        
+        newnode = self.nodeclass(self.nextID())
+
         for k in js:
             if k == 'properties':
                 return self._parseJSD(js[k])
@@ -50,8 +54,8 @@ class JSONSchemaParser():
                 pass
             elif isinstance(js[k], dict):
                 cardinalities = self.getCardinalities(js[k])
-                key = k + '/' + str(cardinalities[0]) + '/' + str(cardinalities[1]) # Primitive way of storing cardinalities with the node name.
-                result[key] = self._parseJSD(js[k])
+                newnode.setValues(cardinalities[0], cardinalities[1], k, None)
+                newnode.addChild(self._parseJSD(js[k]))
             elif k == '$ref':
                 refvalue = js[k]
                 if refvalue.startswith('#/'):
@@ -64,9 +68,9 @@ class JSONSchemaParser():
                 return self._parseJSD(refstruct)
             else:
                 # I'm not really sure what this is, so just store it with an asterisk.
-                result[k] = '*'
+                newnode.setValues(1, 1, k + ' *', None)
 
-        return result
+        return newnode
         
     # Look for the given key in all of jsonstruct.
     # Returns list of all the corresponding values.
@@ -113,3 +117,5 @@ if __name__ == "__main__":
     jp.setNodeclass(EUCDMNode)
 
     res = jp.parseJSD()
+    gg = Graph()
+    gg.showGraph(res)

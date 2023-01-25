@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ROOT id="1" subschemas="i;e;t">
+    <A id="2" minOccurs="1" maxOccurs="13" subschemas="t"/>
+    <B id="3" minOccurs="1" maxOccurs="1" subschemas="i;e;t">
+        <F id="4" subschemas="i;e;t"/>
+        <G id="5" subschemas="i;e;t"/>
+    </B>
+    <C id="6" minOccurs="1" maxOccurs="1" subschemas="e">
+        <H id="7" subschemas="e"/>
+        <I id="8" subschemas="e"/>
+    </C>
+    <E id="12" subschemas="i;e;t">
+        <L id="13" minOccurrs="1" maxOccurs="9999" subschemas="i;e">
+            <N id="14" subschemas="i;e">
+                <O id="15" subschemas="i;e"/>
+                <P id="16" subschemas="e"/>
+            </N>
+        </L>
+    </E>
+</ROOT>

@@ -1,0 +1,62 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "schemaVersion": "2.2.0",
+    "title": "Declaration",
+    "description": "Created 2022-08-29T16:09",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "schemaVersion": {
+            "pattern": "^2[.][0-9]+[.][0-9]+$",
+            "type": "string"
+        },
+        "procedureCategory": {
+            "type": "string",
+            "maxLength": 3
+        },
+        "Declaration": {
+            "description": "1",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Goods_shipment": {
+                    "description": "12",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {}
+                },
+                "Declarant": {
+                    "description": "3",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "Identification_number": {
+                            "description": "5. EUCDM format=an..17",
+                            "type": "string",
+                            "pattern": "^[a-\u00e5A-\u00c50-9]{0,17}$"
+                        },
+                        "Name": {
+                            "description": "4. EUCDM format=an..70",
+                            "type": "string",
+                            "pattern": "^[a-\u00e5A-\u00c50-9]{0,70}$"
+                        }
+                    },
+                    "required": [
+                        "Identification_number",
+                        "Name"
+                    ]
+                },
+                "Result_indicator": {
+                    "description": "2. EUCDM format=an2",
+                    "type": "string",
+                    "pattern": "^[a-\u00e5A-\u00c50-9]{2}$"
+                }
+            },
+            "required": [
+                "Goods_shipment",
+                "Declarant",
+                "Result_indicator"
+            ]
+        }
+    }
+}

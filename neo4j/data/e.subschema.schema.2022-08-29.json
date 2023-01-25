@@ -1,0 +1,119 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "schemaVersion": "2.2.0",
+    "title": "Declaration",
+    "description": "Created 2022-08-29T16:11",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "schemaVersion": {
+            "pattern": "^2[.][0-9]+[.][0-9]+$",
+            "type": "string"
+        },
+        "procedureCategory": {
+            "type": "string",
+            "maxLength": 3
+        },
+        "Declaration": {
+            "description": "1",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Goods_shipment": {
+                    "description": "12",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "Government_agency_goods_item": {
+                            "description": "13",
+                            "type": "array",
+                            "maxItems": 9999,
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "Dangerous_goods": {
+                                        "description": "14",
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "properties": {
+                                            "UN_number": {
+                                                "description": "15. EUCDM format=n4",
+                                                "type": "integer",
+                                                "minimum": 1000,
+                                                "maximum": 9999
+                                            },
+                                            "Sequence_number": {
+                                                "description": "16",
+                                                "type": "object",
+                                                "additionalProperties": false,
+                                                "properties": {}
+                                            }
+                                        },
+                                        "required": [
+                                            "UN_number",
+                                            "Sequence_number"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "Dangerous_goods"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "Government_agency_goods_item"
+                    ]
+                },
+                "Exporter": {
+                    "description": "6",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "Identification_number": {
+                            "description": "8. EUCDM format=an..17",
+                            "type": "string",
+                            "pattern": "^[a-\u00e5A-\u00c50-9]{0,17}$"
+                        },
+                        "Name": {
+                            "description": "7. EUCDM format=an..70",
+                            "type": "string",
+                            "pattern": "^[a-\u00e5A-\u00c50-9]{0,70}$"
+                        }
+                    },
+                    "required": [
+                        "Identification_number",
+                        "Name"
+                    ]
+                },
+                "Declarant": {
+                    "description": "3",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "Identification_number": {
+                            "description": "5. EUCDM format=an..17",
+                            "type": "string",
+                            "pattern": "^[a-\u00e5A-\u00c50-9]{0,17}$"
+                        },
+                        "Name": {
+                            "description": "4. EUCDM format=an..70",
+                            "type": "string",
+                            "pattern": "^[a-\u00e5A-\u00c50-9]{0,70}$"
+                        }
+                    },
+                    "required": [
+                        "Identification_number",
+                        "Name"
+                    ]
+                }
+            },
+            "required": [
+                "Goods_shipment",
+                "Exporter",
+                "Declarant"
+            ]
+        }
+    }
+}

@@ -1,0 +1,17 @@
+<rod1>
+    <pattedyr>
+        <tiger></tiger>
+        <hund/>
+        <kat/>
+    </pattedyr>
+    <fisk>
+        <saltvandsfisk>
+            <havørred/>
+            <kulmule/>
+        </saltvandsfisk>
+        <ferskvandsfisk>
+            <gedde/>
+            <laks/>
+        </ferskvandsfisk>
+    </fisk>
+</rod1>

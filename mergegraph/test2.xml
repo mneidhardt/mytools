@@ -1,0 +1,23 @@
+<rodB>
+    <pattedyr>
+        <menneske/>
+        <kat/>
+    </pattedyr>
+    <insekter>
+        <flyvende>
+            <myg/>
+            <bi/>
+        </flyvende>
+        <underjordisk>
+            <regnorm/>
+        </underjordisk>
+    </insekter>
+    <fisk>
+        <ferskvandsfisk>
+            <gedde>
+                <grå/>
+                <sort/>
+            </gedde>
+        </ferskvandsfisk>
+    </fisk>
+</rodB>

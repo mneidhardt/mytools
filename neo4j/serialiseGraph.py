@@ -1,4 +1,5 @@
 import sys
+from getpass import getpass
 from neo4j import GraphDatabase
 
 # Serialise a Neo4j tree graph.
@@ -24,7 +25,7 @@ def serialiseGraph(session, rootdeno):
 def serialise(session, path):
     result = []
     query = createQuery(path)
-    print(query)
+    # print(query)
     g = session.read_transaction( lambda tx: tx.run(query,).graph())
     result.append(stringifyNode(path[-1]))
     
@@ -60,13 +61,13 @@ def createQuery(path):
     # The last relation and the last node must have variables attached, as they are the ones
     # I want returned.
     expr.append("<-[r:CHILD_OF]-")
-    expr.append("(n:Node) where {ss} in n.Subschemas".format(ss=subschema))
+    expr.append("(n:Node) where '{ss}' in n.Subschemas".format(ss=subschema))
     expr.append(' return n,r')
     return 'MATCH ' + ''.join(expr)
 
-userid = sys.argv[1]
-password = sys.argv[2]
-subschema = sys.argv[3]
+userid = getpass(prompt='Userid: ')
+password = getpass(prompt='Password: ')
+subschema = sys.argv[1]
 driver = GraphDatabase.driver("bolt://localhost:7687", auth=(userid, password))
 
 with driver.session() as session:

@@ -1,0 +1,10 @@
+0;0;ROOT;;;Root;;;Root element. A tree graph needs a root, and we only handle tree graphs.
+1;1;Declaration;;;Declaration;IET;;Based on EUCDM structure and enriched with declaration-relevant information, from DDNXA, DDNTA.
+2;2;Master Consignment;;;MasterConsignment;;;
+3;3;Master Consignment Item;;;MasterConsignmentItem;;;
+4;4;House Consignment;;;HouseConsignment;;;
+5;5;House Consignment Item;;;HouseConsignmentItem;;;
+6;6;Goods Shipment;;;GoodsShipment;;;
+7;7;Government Agency Goods Item;;;GovernmentAgencyGoodsItem;;;
+8;11 01 000 000;Arrival Date And Time;p=^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$;;arrivalDateAndTime;;;
+9;11 01 001 000;Declaration type;p=^.{1,5}$;Y;declarationType;IE;;

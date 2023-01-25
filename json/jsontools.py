@@ -23,11 +23,17 @@ class JSONTool():
 
         return list
 
-    # Get all elements under a specific key, e.g. 'definitions'.
-    def getChildren(self, json):
+    # Get all elements in JSON structure js.
+    # This adds number of grand children if any,
+    # and type (of the json element) if none.
+    def getChildren(self, js):
         result = []
-        for k in json:
-            result.append(k)
+        for k in js:
+            if isinstance(js[k], dict) or isinstance(js[k], list):
+                size = str(len(js[k]))
+            else:
+                size = type(js[k]).__name__
+            result.append(k + ' (' + size + ')')
         return result
 
     # Like findpath, but using recursion.
@@ -84,6 +90,7 @@ class JSONTool():
             print('\n'.join(kids))
         else:
             print('Not found.')
+
 
 class EUCDMXMLJSONMapperTool(JSONTool):
     # Class specifically made for analysing IExxx vs EUCDM.
@@ -175,6 +182,7 @@ class EUCDMJSONTool(JSONTool):
 
     def __init__(self):
         self.pm = None
+        self.setrequired = False    # False if no fields are required, true if all are.
 
     def setPatternMatcher(self, patternmatcher):
         self.pm = patternmatcher
@@ -200,73 +208,79 @@ class EUCDMJSONTool(JSONTool):
         if node.getFormat():   # if there is a format, this is not an object.
             restrictions = self.pm.getRestrictions(node.getFormat())
 
-            if node.getCardinality() > 1:
-                json = {}
-                json['description'] = str(node.getKey()) + '. EUCDM format=' + node.getFormat()
-                json['type'] = 'array'
-                json['maxItems'] = node.getCardinality()
-                json['items'] = {}
+            if node.getMaxCardinality() > 1:
+                jsstruct = {}
+                jsstruct['description'] = node.getDescription()
+                jsstruct['type'] = 'array'
+                jsstruct['minItems'] = node.getMinCardinality()
+                jsstruct['maxItems'] = node.getMaxCardinality()
+                jsstruct['items'] = {}
                 for r in restrictions:
-                    json['items'][r[0]] = r[1]
-                return json
+                    jsstruct['items'][r[0]] = r[1]
+                return jsstruct
             else:
-                json = {}
-                json['description'] = str(node.getKey()) + '. EUCDM format=' + node.getFormat()
+                jsstruct = {}
+                jsstruct['description'] = node.getDescription()
                 for r in restrictions:
-                    json[r[0]] = r[1]
-                return json
+                    jsstruct[r[0]] = r[1]
+                return jsstruct
         else:
-            if node.getCardinality() > 1:
-                json = {}
-                json['description'] = str(node.getKey())
-                json['type'] = 'array'
-                json['maxItems'] = node.getCardinality()
-                json['items'] = {}
-                json['items'] = {}
-                json['items']['type'] = 'object'
-                json['items']['additionalProperties'] = False
-                json['items']['properties'] = {}
+            if node.getMaxCardinality() > 1:
+                jsstruct = {}
+                jsstruct['description'] = node.getDescription()
+                jsstruct['type'] = 'array'
+                jsstruct['minItems'] = node.getMinCardinality()
+                jsstruct['maxItems'] = node.getMaxCardinality()
+                jsstruct['items'] = {}
+                jsstruct['items'] = {}
+                jsstruct['items']['type'] = 'object'
+                jsstruct['items']['additionalProperties'] = False
+                jsstruct['items']['properties'] = {}
                 for kid in node.getChildren():
-                    json['items']['properties'][self.convertName(kid.getName())] =  self.buildJSONSchema(kid)
-                    if 'required' not in json['items']:
-                        json['items']['required'] = []
-                    json['items']['required'].append(self.convertName(kid.getName()))
-                return json
+                    jsstruct['items']['properties'][self.convertName(kid.getName())] =  self.buildJSONSchema(kid)
+
+                    if self.setrequired:
+                        if 'required' not in jsstruct['items']:
+                            jsstruct['items']['required'] = []
+                        jsstruct['items']['required'].append(self.convertName(kid.getName()))
+                return jsstruct
             else:
-                json = {}
-                json['description'] = str(node.getKey())
-                json['type'] = 'object'
-                json['additionalProperties'] = False
-                json['properties'] = {}
+                jsstruct = {}
+                jsstruct['description'] = node.getDescription()
+                jsstruct['type'] = 'object'
+                jsstruct['additionalProperties'] = False
+                jsstruct['properties'] = {}
                 for kid in node.getChildren():
-                    json['properties'][self.convertName(kid.getName())] =  self.buildJSONSchema(kid)
-                    if 'required' not in json:
-                        json['required'] = []
-                    json['required'].append(self.convertName(kid.getName()))
-                return json
+                    jsstruct['properties'][self.convertName(kid.getName())] =  self.buildJSONSchema(kid)
+
+                    if self.setrequired:
+                        if 'required' not in jsstruct:
+                            jsstruct['required'] = []
+                        jsstruct['required'].append(self.convertName(kid.getName()))
+                return jsstruct
         
     def buildJSONInstance(self, node):
         if node.getFormat():   # if there is a format, this is not an object.
             restrictions = self.pm.getRestrictions(node.getFormat())
 
-            if node.getCardinality() > 1:
-                json = []
-                for i in range(0, min(node.getCardinality(), 2)):
-                    json.append(self.pm.generateSample(node.getFormat()))
-                return json
+            if node.getMaxCardinality() > 1:
+                jsstruct = []
+                for i in range(0, min(node.getMaxCardinality(), 2)):
+                    jsstruct.append(self.pm.generateSample(node.getFormat()))
+                return jsstruct
             else:
                 return self.pm.generateSample(node.getFormat())
         else:
-            if node.getCardinality() > 1:
+            if node.getMaxCardinality() > 1:
                 children = {}
                 for kid in node.getChildren():
                     children[self.convertName(kid.getName())] = self.buildJSONInstance(kid)
-                json = []
-                json.append(children)
-                return json
+                jsstruct = []
+                jsstruct.append(children)
+                return jsstruct
             else:
-                json = {}
+                jsstruct = {}
                 for kid in node.getChildren():
                     childobj = self.buildJSONInstance(kid)
-                    json[self.convertName(kid.getName())] = childobj
-                return json
+                    jsstruct[self.convertName(kid.getName())] = childobj
+                return jsstruct

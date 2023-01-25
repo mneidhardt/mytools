@@ -4,8 +4,8 @@ import random
 
 class PatternMatcher():
     
-    # Class for handling formats of the EUCDM.
-    # They have several different formats:
+    # Class for handling formats and patterns.
+    # The formats from EUCDM have several different possibilities:
     # Format       My interpretation, based on EU Law:
     # a2        => Alphabetic characters, exactly 2 of them.
     # a..2      => Alphabetic characters, 0 to 2 of them.
@@ -13,11 +13,19 @@ class PatternMatcher():
     # an..2     => Alphanumeric characters, 0 to 2 of them.
     # n4        => integer with 4 digits.
     # n4,2      => float with 4 digits, up to 2 of which are decimals.
-    # n..4      => integer with 0 to 4 digits.
-    # n..4,2    => float with 0 to 4 digits, up to 2 of which are decimals.
+    # n..4      => integer with 1 to 4 digits.
+    # n..4,2    => float with 1 to 4 digits, up to 2 of which are decimals.
+    #
+    # A regex in this context is this:
+    # p=<regex>. <regex> is any valid regular expression.
     #--------------------------------------------------------------------
 
     def __init__(self):
+        # When using the formats a..X and an..X, what should be the minimum length of the string?
+        # Initially I thought it should be zero, but now I'm not sure.
+        # But to make changes easier, I am using this variable to denote minLength when using an..X format.
+        self.minlengthDotNotation = 0
+        
         self.patterns = []
         self.patterns.append(re.compile('^a(\d+)$', re.IGNORECASE))
         self.patterns.append(re.compile('^a\.\.(\d+)$', re.IGNORECASE))
@@ -27,6 +35,7 @@ class PatternMatcher():
         self.patterns.append(re.compile('^n(\d+),(\d+)$'))
         self.patterns.append(re.compile('^n\.\.(\d+)$'))
         self.patterns.append(re.compile('^n\.\.(\d+),(\d+)$'))
+        self.patterns.append(re.compile('^p\=(.+)$', re.IGNORECASE))
         self.patterns.append(re.compile('^\s*$'))
 
     # Test version of 'n..N,M' that allows empty string, using regex.
@@ -49,28 +58,27 @@ class PatternMatcher():
     def getRestrictions(self, format):
         match = self.patterns[0].match(format)
         if match:
-            minmax = '{' + match.group(1) + '}'
-            return [['type', 'string'], ['pattern', '^[a-åA-Å]'+minmax+'$']]
+            return [['type', 'string'], ['minLength', int(match.group(1))], ['maxLength', int(match.group(1))]]
 
         match = self.patterns[1].match(format)
         if match:
-            minmax = '{0,' + match.group(1) + '}'
-            return [['type', 'string'], ['pattern', '^[a-åA-Å]'+minmax+'$']]
+            return [['type', 'string'], ['minLength', self.minlengthDotNotation], ['maxLength', int(match.group(1))]]
 
         match = self.patterns[2].match(format)
         if match:
-            minmax = '{' + match.group(1) + '}'
-            return [['type', 'string'], ['pattern', '^[a-åA-Å0-9]'+minmax+'$']]
+            return [['type', 'string'], ['minLength', int(match.group(1))], ['maxLength', int(match.group(1))]]
 
         match = self.patterns[3].match(format)
         if match:
-            minmax = '{0,' + match.group(1) + '}'
-            return [['type', 'string'], ['pattern', '^[a-åA-Å0-9]'+minmax+'$']]
+            return [['type', 'string'], ['minLength', self.minlengthDotNotation], ['maxLength', int(match.group(1))]]
 
         match = self.patterns[4].match(format)  # e.g. "n6".
         if match:
             size = int(match.group(1))
-            min = pow(10, size-1)
+            if size > 1:
+                min = pow(10, size-1)
+            else:
+                min = 0
             max = pow(10, size)-1
             return [['type', 'integer'], ['minimum', min], ['maximum', max]]
 
@@ -100,6 +108,10 @@ class PatternMatcher():
             return [['type', 'number'], ['minimum', min], ['maximum', max], ['multipleOf', decimals]]
 
         match = self.patterns[8].match(format)
+        if match:
+            return [['type', 'string'], ['pattern', match.group(1)]]
+            
+        match = self.patterns[9].match(format)
         if match:
             return []
 

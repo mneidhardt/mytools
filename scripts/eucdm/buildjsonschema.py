@@ -3,77 +3,74 @@ import datetime
 import io
 sys.path.insert(1, 'G:\Mine_Opgaver\kode')
 from mytools.graph.graphs import EUCDMNode, Graph
-from mytools.eucdm.basestructures import BaseStructures
 from mytools.json.jsontools import EUCDMJSONTool
 from mytools.eucdm.patternmatcher import PatternMatcher
-
-def baseSchema(version):
-    version = [str(e) for e in version] # Convert version numbers to strings.
-    result = {}
-    result['$schema'] = 'https://json-schema.org/draft/2020-12/schema'
-    result['schemaVersion'] = '.'.join(version) # e.g. '2.1.0'
-    result['title'] = 'Declaration'
-    result['description'] = 'Created ' + datetime.datetime.now().strftime("%Y-%m-%dT%H:%M")
-    result['type'] = 'object'
-    result['additionalProperties'] = False
-    result['properties'] = {}
-    result['properties']['schemaVersion'] = {}
-    result['properties']['schemaVersion']['pattern'] = '^' + version[0] + '[.][0-9]+[.][0-9]+$'
-    result['properties']['schemaVersion']['type'] = 'string'
-    result['properties']['procedureCategory'] = {}      # The current key for what EUCDM calls 'column'. May be changed to 'column'.
-    result['properties']['procedureCategory']['type'] = 'string';
-    result['properties']['procedureCategory']['maxLength'] = 3;
-    #result['properties']['column']['type'] = 'string'
-    #result['properties']['column']['enum'] = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'I1', 'I2']
-
-    return result
-
-# This will information to nodes of a graph
-def annotateNodes(node, dedict, jt):
-    node.setName(dedict[node.getKey()][0])
-    node.setFormat(dedict[node.getKey()][1])
-    node.setCodelist(dedict[node.getKey()][2])
-
-    for kid in node.getChildren():
-        annotateNodes(kid, dedict, jt)
+from mytools.eucdm.datacatalog import DataCatalog
+from mytools.files.filetools import FileTools
 
 def syntax():
     txt = []
-    txt.append(sys.argv[0] + ' sg de cn')
+    txt.append(sys.argv[0] + ' sg de op')
     txt.append('  sg is the filename containing the serialied graph.')
     txt.append('  de is the filename containing the data elements, their names and formats.')
-    txt.append('  cn is the columnname you want a schema for. Currently not necessary.')
+    txt.append('  op is the prefix for the output file.')
     return "\n".join(txt)
+
+def annotateNodes(nodes, catalog):
+    enrichednodes = []
+        
+    for node in nodes:
+        if node[0] == '!':
+            enrichednodes.append(node[0])
+        else:
+            extra = catalog.lookupKey(int(node[0]))
+            if extra is None:
+                raise ValueError('No node in catalog with key', node[0])
+            else:
+                enrichednodes.append(EUCDMNode(int(node[0]), extra['elementname'], node[1], node[2], extra['altID'], extra['format'], extra['codelist']))
+    return enrichednodes
 
 if __name__ == "__main__":
 
     try:
-        filename = sys.argv[1] # Name of file containing serialised graph.
-        defilename = sys.argv[2] # Name of file containing data element number, name and format.
-        columnname = sys.argv[3] # 'Column' name. Not used at the moment, other than for output filename.
+        sgfilename = sys.argv[1] # Name of file containing serialised graph.
+        datacatalogfilename = sys.argv[2] # Name of file containing the data catalog.
+        outputprefix = sys.argv[3] # Prefix for output filename.
 
-        bs = BaseStructures()
+        ft = FileTools()
         gtool = Graph()
         jtool = EUCDMJSONTool()
         jtool.setPatternMatcher(PatternMatcher())
     
-        sgraf = gtool.readSerialisedGraph(filename)
-        dedict = bs.getDEDict(defilename)
-        graf = gtool.deserialiseGraph(sgraf)
-        annotateNodes(graf, dedict, jtool)
-        gtool.showGraph(graf)
-        schema = {}
-        schema[jtool.convertName(graf.getName())] = jtool.buildJSONSchema(graf)
-        version = [2,2,0]
-        result = baseSchema(version)
-        convertedname = jtool.convertName(graf.getName())   # This is the name of the root node.
-        result['properties'][convertedname] = schema[convertedname]
-    
-        schemafilename = columnname + '.schema.' + datetime.datetime.now().strftime("%Y-%m-%d") + '.json'
-        with io.open(schemafilename, 'w', encoding='utf8') as fh:
-            fh.write(jtool.dumps(result))
+        nodes = gtool.readSerialisedGraph(sgfilename)       # Read the basic serialised graph.
+        catalog = DataCatalog(datacatalogfilename)          # Get the data catalog.
+        annotatednodes = annotateNodes(nodes, catalog)  # Annotate nodes with information from the catalog.
+        
+        graf = gtool.deserialiseGraphLoop(annotatednodes)
 
-    #except (IndexError, ValueError, NameError):
-    except Exception as err:
+        gtool.showGraph(graf)
+        
+        generatedschema = jtool.buildJSONSchema(graf)
+        version = [2,2,0]
+
+        schema = {}
+        schema['$schema'] = 'https://json-schema.org/draft/2020-12/schema'
+        version = [str(e) for e in version] # Convert version numbers to strings.
+        schema['schemaVersion'] = '.'.join(version)
+        schema['title'] = 'DeclarationPayload'
+        schema['description'] = 'Created ' + datetime.datetime.now().strftime("%Y-%m-%dT%H:%M")
+        schema['type'] = 'object'
+        schema['additionalProperties'] = False
+        
+        # The generated schema has only basic keys in the root, and I want the ones above here,
+        # and I want them at the top, hence the above assignments, and hence I only take 'properties' from the generated schema.
+        schema['properties'] = generatedschema['properties']
+        
+        schemafilename = outputprefix + '.schema.' + datetime.datetime.now().strftime("%Y-%m-%d") + '.json'
+        with io.open(schemafilename, 'w', encoding='utf8') as fh:
+            fh.write(jtool.dumps(schema))
+
+    except (IndexError, ValueError, NameError) as err:
+    # except Exception as err:
         print(str(err))
         print(syntax())

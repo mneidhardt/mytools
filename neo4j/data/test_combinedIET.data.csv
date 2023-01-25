@@ -1,0 +1,17 @@
+#ID;Ref.ID5; Name; Format; Codelist; Universe; UniverseID
+1;;Declaration;;;EUCDM;
+2;;Result indicator;an2;;EUCDM;
+3;;Declarant;;;EUCDM;13 05 000 000
+4;;Name;an..70;;EUCDM;13 05 016 000
+5;;Identification number;an..17;;EUCDM;13 05 017 000
+6;;Exporter;;;EUCDM;13 01 000 000
+7;;Name;an..70;;EUCDM;13 01 016 000
+8;;Identification number;an..17;;EUCDM;13 01 017 000
+9;;Importer;;;EUCDM;13 04 000 000
+10;;Name;an..70;;EUCDM;13 04 016 000
+11;;Identification number;an..17;;EUCDM;13 04 017 000
+12;;Goods shipment;;;EUCDM;
+13;;Government agency goods item;;;EUCDM;
+14;;Dangerous goods;;;EUCDM;18 07 000 000
+15;;UN number;n4;;EUCDM;18 07 055 000
+16;;Sequence number;;;EUCDM;

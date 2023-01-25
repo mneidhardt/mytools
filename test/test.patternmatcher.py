@@ -11,10 +11,10 @@ class TestPatternMatcher(unittest.TestCase):
 
         # Dict where key = input and value = expected result.
         tests = {}
-        tests['a1']      = [['type', 'string'], ['pattern', '^[a-åA-Å]{1}$']]
-        tests['an18']    = [['type', 'string'], ['pattern', '^[a-åA-Å0-9]{18}$']]
-        tests['a..3']    = [['type', 'string'], ['pattern', '^[a-åA-Å]{0,3}$']]
-        tests['an..512'] = [['type', 'string'], ['pattern', '^[a-åA-Å0-9]{0,512}$']]
+        tests['a1']      = [['type', 'string'], ['minLength', 1], ['maxLength', 1]]
+        tests['an18']    = [['type', 'string'], ['minLength', 18], ['maxLength', 18]]
+        tests['a..3']    = [['type', 'string'], ['minLength', 0], ['maxLength', 3]]
+        tests['an..512'] = [['type', 'string'], ['minLength', 0], ['maxLength', 512]]
         tests['n6']      = [['type', 'integer'], ['minimum', 100000], ['maximum', 999999]]
         tests['n12']     = [['type', 'integer'], ['minimum', 100000000000], ['maximum', 999999999999]]
         tests['n6,2']    = [['type', 'number'], ['minimum', 1000], ['maximum', 999999], ['multipleOf', 0.01]]

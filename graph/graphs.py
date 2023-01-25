@@ -19,6 +19,9 @@ class Node():
     def addChild(self, node):
         self.children.append(node)
 
+    def removeChild(self, id):
+        self.children.pop(id)
+        
     def getName(self):
         return self.name
 
@@ -64,41 +67,104 @@ class GraphmergeNode(Node):
 # and an..30 for 0-30 alphannumeric characters.
 #----------------------------------------------------------------------------------------
 class EUCDMNode(Node):
-    def __init__(self, key, cardinality, name, format):
+    def __init__(self, key, name, mincardinality, maxcardinality, altkey=None, format=None, codelist=None):
+        if not isinstance(key, int):
+            raise ValueError('Key must be an integer:', key)
+        elif not isinstance(name, str):
+            raise ValueError('Name must be a string:', name)
+        elif not isinstance(mincardinality, int):
+            raise ValueError('Min.cardinality must be an integer:', mincardinality)
+        elif not isinstance(maxcardinality, int):
+            raise ValueError('Max.cardinality must be an integer:', maxcardinality)
+            
         super().__init__(name)
-        self.key = key              # This is the full DENumber. String.
-        self.cardinality = cardinality # Cardinality of this node in relation to its parent. Int.
-        self.format = format            # an..XY or similar, as in EUCDM. String.
-        self.codelist = None            # Does this field have a code list. Value is one of ['Y', 'N', None].
+        self.key = key                          # This is the ID of the node in the data catalog. Int.
+        self.mincardinality = mincardinality    # Minimum cardinality of this node in relation to its parent. Int.
+        self.maxcardinality = maxcardinality    # Maximum cardinality of this node in relation to its parent. Int.
+        super().__init__(name)                  # Name of the node. String.
+        self.altkey = altkey                    # Alternative key, e.g. DE Number or EUCDM. String.
+        self.format = format                    # Format for the node, if relevant (an..XY or similar, as in EUCDM). String.
+        self.codelist = codelist                # Boolean stating whether this field has a code list. Value is one of ['Y', 'N', None].
         
     def getKey(self):
         return self.key
      
-    def getDENumber(self):
-        return self.denumber
+    def getAltKey(self):
+        return self.altkey
+     
+    def getMinCardinality(self):
+        return self.mincardinality
 
-    def getCardinality(self):
-        return self.cardinality
+    def getMaxCardinality(self):
+        return self.maxcardinality
 
     def getFormat(self):
         return self.format
 
-    def setFormat(self, format):
-        self.format = format
-
     def getCodelist(self):
         return self.codelist
 
-    def setCodelist(self, value):
-        self.codelist = value
-
+    # Helper method for use mainly when creating a JSON Schema.
+    def getDescription(self):
+        result = []
+        separator = '/'
+        replacement = '#' + str(ord(separator)) + ';'
+        
+        for v in [self.key, self.altkey, self.format]:
+            if v is not None:
+                result.append(str(v).replace(separator, replacement))
+            else:
+                result.append('')
+        return separator.join(result)
+        
     def __repr__(self):
         result = []
-        for v in [self.key, str(self.cardinality), self.name, self.format, self.codelist]:
+        for v in [self.key, self.name, self.mincardinality, self.maxcardinality, self.altkey, self.format, self.codelist]:
             if v:
-                result.append(v)
+                result.append(str(v))
+            else:
+                result.append('None')
 
         return '; '.join(result)
+
+
+class Neo4jNode(Node):
+    def __init__(self, name, id, ownid=None, mincard=None, maxcard=None):
+        super().__init__(name)          # The name of this node. String.
+        self.id = id                    # The ID of the node. String.
+        self.ownID  = ownid             # If the node has an ID of its own, e.g. DENumber for EUCDM. String.
+        self.mincardinality = mincard   # Minimum cardinality for this node in relation to its parent. Integer.
+        self.maxcardinality = maxcard   # Maximum cardinality for this node in relation to its parent. Integer.
+        self.subschemas = []            # This is a list of the subschemas this node participates in.
+
+    def getID(self):
+        return self.id
+
+    def setOwnID(self, ownid):
+        self.ownid = ownid
+
+    def getMinCardinality(self):
+        return self.mincardinality
+     
+    def getMaxCardinality(self):
+        return self.maxcardinality
+
+    def getSubSchemas(self):
+        return self.subschemas
+
+    def addSubSchema(self, subschema):
+        self.subschemas.append(subschema)
+    
+    # Stringify node, possibly with relation.
+    def toString(self, varname=''):
+        return "(" + varname + ":Node {name: '" + self.name + "', ID: '" + self.id + "'})"
+        
+    def toStringWithRelation(self, varname='', direction='L'):
+        relation = "-[:CHILD_OF {mincardinality: " + str(self.getMinCardinality()) + ", maxcardinality: " + str(self.getMaxCardinality()) + "}]-"
+        if direction.upper() == "L":
+            return "<" + relation + self.toString(varname)
+        else:
+            return relation + ">" + self.toString(varname)
 
 class Graph():
     def __init__(self):
@@ -108,8 +174,15 @@ class Graph():
     def showGraph(self, node, indent=''):
         print(indent, str(node))
 
+        if False:
+            char = '    '
+        elif len(indent) == 0 or indent[-1] == '+':
+            char = '----'
+        else:
+            char = '++++'
+            
         for kid in node.getChildren():
-            self.showGraph(kid, indent+'    ')
+            self.showGraph(kid, indent+char)
 
     def showMergedGraph(self, node, indent=0):
         print(indent*';', str(node))
@@ -117,10 +190,32 @@ class Graph():
         for kid in node.getChildren():
             self.showMergedGraph(kid, indent+1)
 
+    # Does depth first traversal, with path.
+    # This means that the method saves the full path of every leaf.
+    # Returns a list of all leaves with full path.
+    def dfswp(self, node, path=[]):
+        result = []
+        
+        if node is None:
+            return result
+        else:
+            path.append(node.getName())
+
+        if len(node.getChildren()) == 0:
+            result.append('.'.join(path))
+        else:
+            for child in node.getChildren():
+                result.extend(self.dfswp(child, path))
+                path.pop()
+        
+        return result
+
+
+    
     # Serialises a graph using end-of-child-markers.
     def serialiseGraph(self, root):
         result = []
-        serialise(root, result)
+        self.serialise(root, result)
         return result
     
     def serialise(self, node, result):
@@ -130,14 +225,54 @@ class Graph():
             return
     
         for kid in node.getChildren():
-            serialise(kid, result)
+            self.serialise(kid, result)
         result.append('!')
+
+    def getRoot(self, node):
+        while True:
+            if node is not None and node.getParent() is not None:
+                node = node.getParent()
+            else:
+                break
+        return node
+
+    # The node list, i.e. the argument for deserialiseGraphLoop(), may contain end-of-child-markers at the very end.
+    # They have no effect when deserialising a graph, and if there are too many, deserialisation
+    # will fail. This will remove them.
+    # Of course, you could also ensure that the creator of the serialised graph does not make any errors.
+    def removeTrailingMarkers(self, nodes):
+        while True:
+            if nodes[-1] == '!':
+                nodes.pop()
+            else:
+                break
+
+        return nodes
     
     # Deserialise a graph serialised using end-of-child-markers.
+    # This version uses looping, rather than recursion, as recursion only 
+    # works with relatively small graphs.
+    # One annoying thing with this is that I need to find the root node at the end.
     # This uses EUCDMNode.
-    # nodes is a list of tuples, as produced by readSerialisedGraph below here.
-    # Each of these tuples is a node and has 3 elements: node key, minimum cardinality and maximum cardinality.
-    # At the moment, I do not use minimum cardinality, only maximum cardinality.
+    # nodes is a list of either '!' or EUCDMNode, exactly as seen in the serialised graph, but where the real nodes have been 
+    # turned into EUCDMNodes.
+    def deserialiseGraphLoop(self, nodes):
+        nodes = self.removeTrailingMarkers(nodes)
+        gnode = nodes[0]
+        nodes.pop(0)
+        for node in nodes:
+            if node == '!':
+                gnode = gnode.getParent()
+            else:
+                gnode.addChild(node)
+                node.setParent(gnode)
+                gnode = node
+
+        # Since the graph is made using a loop, I need to find the root before I return.
+        return self.getRoot(gnode)
+
+    # Recursive version - no good for graphs with more than approx. 900 nodes.
+    # Will exceed the max. recursion depth.
     def deserialiseGraph(self, nodes):
         idx = 0
         root = EUCDMNode(nodes[idx][0], nodes[idx][2], None, None)
@@ -154,7 +289,7 @@ class Graph():
             node.addChild(child)
             child.setParent(node)
             self.deserialise(nodes, idx+1, child)
-
+            
     # Reads a serialised n-ary tree graph.
     # Returns a list of 3-tuples, one for each node and end-of-child-marker.
     # The 3 elements in a tuple are node key, minimum cardinality, maximum cardinality.
@@ -214,4 +349,44 @@ class Graph():
                 nodes.append(tuple)
 
         return nodes
+
+    # OBSOLETE!
+    # In order to create an overview, this will read a not quite complete, serialised graph.
+    # What is missing are keys (into our datacatalog) for the DDNXA and DDNTA fields without
+    # DENumber (i.e. almost all of them.
+    #-------------------------------------------------------------------------------------------
+    def readSemiSerialisedGraph(self, filename):
+        nodes = []
+        
+        raise Exception('Obsolete.')
+
+        with open(filename) as f:
+            lineno=0
+            for line in f:
+                lineno += 1
+                line = line.strip()
+                if line.lstrip().startswith('#'):
+                    continue
+                elif line.strip().startswith('?'):
+                    elemsB = [e.strip() for e in line.split(' ')]
+                    parts = elemsB[1].split('>')
+                    elems = [elemsB[0]+parts[0]+parts[1], parts[2], parts[3]]
+                else:
+                    elems = [e.strip() for e in line.split('/')]
+
+                if len(elems) == 3:
+                    tuple = (elems[0], int(elems[1]), int(elems[2]))
+                elif len(elems) == 2:
+                    tuple = elems[0], 1, int(elems[1])
+                elif len(elems) == 1 and elems[0] == '!':
+                    tuple = '!', 0, 0
+                elif len(elems) == 1:
+                    tuple = elems[0], 1, 1
+                else:
+                    raise ValueError('Something is not right on line ' + str(lineno))
+                
+                nodes.append(tuple)
+
+        return nodes
+
 
